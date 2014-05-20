@@ -23,10 +23,19 @@ if(file == 0){
 TTree *tree = (TTree *) file->Get("h1");
 
 //Defining all variables and arrays (arrays not needed)
-float X_vtx, Y_vtx, Z_vtx, Px_bm, Py_bm, Pz_bm, Pt_bm, En_bm, Px_l0114, Py_l0114, Pz_l0114, Pt_l0114, En_l0114, Px_l0201, Py_l0201, Pz_l0201, Pt_l0201, En_l0201, Px_l0301, Py_l0301, Pz_l0301, Pt_l0301, En_l0301, phiRAD0, phiRAD1, phi0, phi1, thetaRAD0, thetaRAD1, theta0, theta1, ph0_ph1_mass, proton_rest_mass;
+float X_vtx, Y_vtx, Z_vtx;
+//Variables to do with the incoming photon beam
+float Px_bm, Py_bm, Pz_bm, Pt_bm, En_bm;
+//Variables to do with the recoil proton
+float Px_l0114, Py_l0114, Pz_l0114, Pt_l0114, En_l0114;
+//Variables to do with the two photons
+float Px_l0201, Py_l0201, Pz_l0201, Pt_l0201, En_l0201;
+float Px_l0301, Py_l0301, Pz_l0301, Pt_l0301, En_l0301;
+//Variables needed for calculations
+float phiRAD0, phiRAD1, phi0, phi1;
+float thetaRAD0, thetaRAD1, theta0, theta1;
+float ph0_ph1_mass, proton_rest_mass;
 
-/*float X_vtx[10000], Y_vtx[10000], Z_vtx[10000], Px_bm[10000], Py_bm[10000], Pz_bm[10000], Pt_bm[10000], En_bm[10000], Px_l0114[10000], Py_l0114[10000], Pz_l0114[10000], Pt_l0114[10000], En_l0114[10000], Px_l0201[10000], Py_l0201[10000], Pz_l0201[10000], Pt_l0201[10000], En_l0201[10000], Px_l0301[10000], Py_l0301[10000], Pz_l0301[10000], Pt_l0301[10000], En_l0301[10000];
-*/
 //Setting up the branches
 tree->SetBranchAddress("X_vtx", &X_vtx);
 tree->SetBranchAddress("Y_vtx", &Y_vtx);
@@ -85,7 +94,7 @@ cout << "En_photon1: " << En_l0301[0] << endl;
 */
 
 //Setting up the graphs
-TH1D *graph0 = new TH1D("En_bm", "Energy of the incoming photon beam (GeV)", 200, 0.24, 0.26);
+TH1D *graph0 = new TH1D("En_bm", "Energy of the incoming photon beam (GeV)", 200, 0.23, 0.27);
 TH1D *graph1 = new TH1D("ph0_ph1_mass", "Photon Invariant Mass Reconstruction", 500, 0, 220);
 TH1D *graph2 = new TH1D("proton_mass", "Proton Invariant Mass Reconstruciton", 500, 900, 1000);
 TH1D *graph3 = new TH1D("theta", "Theta for the two Photons", 180, 0, 180);
@@ -100,16 +109,16 @@ for(int i = 0; i < N_entries; i++){
 	//Fill graph0 with the energy info
 	graph0->Fill(En_bm);
 	//Set the values for the beam, proton, recoil proton, and 2 photon vectors
-	double P;
-	P = Pt_bm*1000.0;
-	v_beam.SetXYZM(Px_bm*P, Py_bm*P, Pz_bm*P, 0.0);
+	double P_offset;
+	P_offset = Pt_bm*1000.0;
+	v_beam.SetXYZM(Px_bm*P_offset, Py_bm*P_offset, Pz_bm*P_offset, 0.0);
 	v_proton.SetXYZM(0., 0., 0., 938.27);
-	P = Pt_l0114*1000.0;
-	v_proton_recoil.SetXYZM(Px_l0114*P, Py_l0114*P, Pz_l0114*P, 938.27);
-	P = Pt_l0201*1000.0;
-	v_photon0.SetXYZM(Px_l0201*P, Py_l0201*P, Pz_l0201*P, 0.0);
-	P = Pt_l0301*1000.0;
-	v_photon1.SetXYZM(Px_l0301*P, Py_l0301*P, Pz_l0301*P, 0.0);
+	P_offset = Pt_l0114*1000.0;
+	v_proton_recoil.SetXYZM(Px_l0114*P_offset, Py_l0114*P_offset, Pz_l0114*P_offset, 938.27);
+	P_offset = Pt_l0201*1000.0;
+	v_photon0.SetXYZM(Px_l0201*P_offset, Py_l0201*P_offset, Pz_l0201*P_offset, 0.0);
+	P_offset = Pt_l0301*1000.0;
+	v_photon1.SetXYZM(Px_l0301*P_offset, Py_l0301*P_offset, Pz_l0301*P_offset, 0.0);
 
 	//Add the 2 photons together to find the invariant mass, then fill the graph with the result
 	v_photon_add = v_photon0 + v_photon1;
@@ -148,12 +157,16 @@ for(int i = 0; i < N_entries; i++){
 c0 = new TCanvas("c0", "c0", 700, 1300);
 graph0->Draw(); 
 c1 = new TCanvas("c1", "c1", 700, 1300);
+c1->Divide(1,2);
+c1->cd(1);
 graph1->Draw();
-c2 = new TCanvas("c2", "c2", 700, 1300);
+c1->cd(2);
 graph2->Draw();
-c3 = new TCanvas("c3", "c3", 700, 1300);
+c2 = new TCanvas("c2", "c2", 700, 1300);
+c2->Divide(1,2);
+c2->cd(1);
 graph3->Draw();
-c4 = new TCanvas("c4", "c4", 700, 1300);
+c2->cd(2);
 graph4->Draw();
 
 //Using TSpectrum to output the exact peak position of the mass graphs
